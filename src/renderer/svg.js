@@ -1489,10 +1489,7 @@ define([
 
                 // Finally, draw the HTML img in the canvas.
                 tmpImg.onload = function () {
-                    // IE needs a pause...
-                    setTimeout(function(){
-                        ctx.drawImage(tmpImg, 0, 0, w, h);
-                    }, 200);
+                    ctx.drawImage(tmpImg, 0, 0, w, h);
                 };
             } else {
                 // // Alternative version
@@ -1640,15 +1637,14 @@ define([
             this.dumpToCanvas(id, w, h, ignoreTexts);
 
             // Show image in img tag
-            setTimeout(function() {
-                //console.log(canvas.toDataURL('image/png'));
-                img.src = canvas.toDataURL('image/png');
 
-                // Remove canvas node
-                if (!isDebug) {
-                    parent.removeChild(canvas);
-                }
-            }, 400);
+            //console.log(canvas.toDataURL('image/png'));
+            img.src = canvas.toDataURL('image/png');
+
+            // Remove canvas node
+            if (!isDebug) {
+                parent.removeChild(canvas);
+            }
 
             // Show navigation bar in board
             if (Type.exists(zbar)) {
