@@ -1385,6 +1385,74 @@ define([
             image.src = url;
         },
 
+        dumpToSvg: function(ignoreTexts) {
+            var svgRoot = this.svgRoot,
+                btoa = window.btoa || Base64.encode,
+                svg, tmpImg, cv, ctx,
+                wOrg, hOrg,
+                // DOMURL, svgBlob, url,
+                virtualNode, doc,
+                i, len, values = [],
+                txt;
+
+            // Move all HTML tags (beside the SVG root) of the container
+            // to the foreignObject element inside of the svgRoot node
+            // Problem:
+            // input values are not copied. This can be verified by looking at an innerHTML output
+            // of an input element. Therefore, we do it "by hand".
+            if (this.container.hasChildNodes() && Type.exists(this.foreignObjLayer)) {
+                while (svgRoot.nextSibling) {
+                    // Copy all value attributes
+                    values = values.concat(this._getValuesOfDOMElements(svgRoot.nextSibling));
+                    this.foreignObjLayer.appendChild(svgRoot.nextSibling);
+                }
+                if (ignoreTexts === true) {
+                    // Take out foreignObjLayer, so that it will not be visible
+                    // in the dump.
+                    doc = this.container.ownerDocument;
+                    virtualNode = doc.createElement('div');
+                    virtualNode.appendChild(this.foreignObjLayer);
+                }
+            }
+
+            // Convert the SVG graphic into a string containing SVG code
+            svgRoot.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+            wOrg = svgRoot.getAttribute('width');
+            hOrg = svgRoot.getAttribute('height');
+
+            svg = new XMLSerializer().serializeToString(svgRoot);
+
+            if (ignoreTexts !== true) {
+                // Handle SVG texts
+                // Insert all value attributes back into the svg string
+                len = values.length;
+                for (i = 0; i < len; i++) {
+                    svg = svg.replace('id="' + values[i][0] + '"', 'id="' + values[i][0] + '" value="' + values[i][1] +'"');
+                }
+            }
+
+            // this._getDataUri('uccellino.jpg', function(data) {
+            //     console.log(data);
+            // });
+            // xlink:href="uccellino.jpg"
+
+            if (false) {
+                // Debug: use example svg image
+                svg = '<svg xmlns="http://www.w3.org/2000/svg" version="1.0" width="220" height="220"><rect width="66" height="30" x="21" y="32" stroke="#204a87" stroke-width="2" fill="none" /></svg>';
+            }
+
+            // In IE we have to remove the namespace again.
+            if ((svg.match(/xmlns=\"http:\/\/www.w3.org\/2000\/svg\"/g) || []).length > 1) {
+                svg = svg.replace(/xmlns=\"http:\/\/www.w3.org\/2000\/svg\"/g, '');
+            }
+
+            // Safari fails if the svg string contains a "&nbsp;"
+            // Obsolete with Safari 12+
+            svg = svg.replace(/&nbsp;/g, ' ');
+
+            return svg;
+        },
+
         /**
          * Convert the SVG construction into an HTML canvas image.
          * This works for all SVG supporting browsers.
